@@ -1,0 +1,23 @@
+[project]
+name = "text-to-image-devia"
+version = "0.1.0"
+description = "Prédire un texte à partir d'une image"
+authors = [
+    {name = "Paul21777", email = "paul.theureau@protonmail.com"},
+    {name = "Asup45", email = "thibaut.dessolin@gmail.com"},
+    {name = "bayarm835", email = "bayarm835@gmail.com"}
+]
+dependencies = [
+    "pandas>=2.2.2",
+]
+requires-python = ">=3.11"
+readme = "README.md"
+license = {text = "MIT"}
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+
+[tool.pdm]
+distribution = true
