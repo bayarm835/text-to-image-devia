@@ -22,3 +22,6 @@ license = {text = "MIT"}
 
 [tool.pdm]
 distribution = false
+
+[tool.pdm.dependencies]
+spacy-model-en-core-web-sm = { path = "C:/Users/GRETA/Documents/GitHub/text-to-image-devia/models/en_core_web_sm-3.0.00" }
