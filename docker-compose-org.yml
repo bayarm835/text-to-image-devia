@@ -1,0 +1,26 @@
+version: '3.9'
+
+services:
+  #web:
+  #  build: .
+  #  command: #commande streamlit
+
+  training:
+    build:
+      context: ./train
+      dockerfile: dockerfile
+    volumes:
+      - ./data:/tf
+    ports:
+      - "8888:8888"
+    
+
+  experiment:
+    image: ghcr.io/mlflow/mlflow:v2.12.2
+    volumes:
+      - ./src/text_to_image_devia/experiment:/mlruns
+    ports:
+      - "5000:8080"
+    command: mlflow ui --host 127.0.0.1 -p 8080
+
+  

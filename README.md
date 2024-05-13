@@ -2,7 +2,8 @@
 
 ## Prérequis
 Docker Desktop 
-WSL
+WSL - Ubuntu-22.04
+[NVIDIA Container Toolkit sur WSL](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)  - [version 12.3](https://developer.nvidia.com/cuda-12-3-2-download-archive?target_os=Linux&target_arch=x86_64&Distribution=WSL-Ubuntu&target_version=2.0&target_type=deb_local)
 
 ## Arborescence du projet
 
@@ -42,3 +43,6 @@ WSL
 │ └── visualize.py
 │
 ```
+
+# Entraînement
+`pdm run tensorflow` : Lance un entraînement sur le container tensorflow
