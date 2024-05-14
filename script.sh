@@ -1,1 +1,0 @@
-chmod +x docker run --gpus all -it --rm -v $PWD:/tmp -w /tmp tensorflow/tensorflow:latest-gpu python ./script.py

@@ -1,0 +1,17 @@
+{
+    "image": "ghcr.io/ttmx/tf-torch-docker:main", 
+    
+    "runArgs": [
+      "--gpus",
+      "all"
+    ],
+    "customizations": {
+      "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-toolsai.jupyter"
+        ]
+      }
+    }
+  }
+  
