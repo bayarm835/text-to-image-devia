@@ -39,6 +39,6 @@ def tutorial_taskflow_api():
     
     @task.bash
     def run_training_container():
-            return "docker run --name training_container --rm --gpus all text-to-image-devia-train:latest"
+            return "docker run --name training_container --rm --gpus all --network mlflow text-to-image-devia-train:latest"
     run_training_container()
 tutorial_taskflow_api()
