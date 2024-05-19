@@ -1,0 +1,12 @@
+FROM python:3.9.18-slim
+
+# Set the working directory
+WORKDIR /mlflow
+
+# Install MLflow
+RUN pip install mlflow
+
+# Set the port the app runs on
+EXPOSE 5000
+
+CMD [ "mlflow ui --backend-store-uri $MLFLOW_TRACKING_URI --host 0.0.0.0" ]

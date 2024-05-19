@@ -50,8 +50,9 @@ x-airflow-common:
   # In order to add custom dependencies or upgrade provider packages you can use your extended image.
   # Comment the image line, place your Dockerfile in the directory where you placed the docker-compose.yaml
   # and uncomment the "build" line below, Then run `docker-compose build` to build the images.
-  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.7.1}
-  # build: .
+  #image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.9.1}
+  build: .
+
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
@@ -77,6 +78,9 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
+    - //var/run/docker.sock:/var/run/docker.sock
+    - /models:/models
+    - /src/text_to_image_devia/models:/tmp
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
@@ -86,21 +90,44 @@ x-airflow-common:
       condition: service_healthy
 
 services:
+  #train:
+  #  build:
+  #    context: ./src/text_to_image_devia/models
+  #    dockerfile: ./dockerfile
+  #  ports:
+  #    - "6080:6080"
+  #  volumes:
+  #    - ./src/text_to_image_devia/models:/tmp
+  #  working_dir: /tmp
+  #  command: ["python", "train.py"]
+  #  healthcheck:
+  #    test: ["CMD", "python", "train.py"]
+  #    timeout: 30s
+  #    retries: 5
+  #    start_period: 30s
 
-  train:
+  #serve:
+  #  image: tensorflow/serving:nightly-gpu
+  #  ports:
+  #    - "8501:8501"
+  #  volumes:
+  #    - /tmp/resnet:/models/resnet
+  #  environment:
+  #    - MODEL_NAME=resnet
+  #  
+  #  restart: no
+  mlflow-server:
     build:
-      context:  ./src/text_to_image_devia/models
-      dockerfile: ./dockerfile
+      context: .
+      dockerfile: DockerFile.mlflow
     ports:
-      - "6080:6080"
+      - "5000:5000"
     volumes:
-      - $PWD/train:/tmp
-    working_dir: /tmp
-    healthcheck:
-      test: ["CMD", "python", "train.py"]
-      timeout: 30s
-      retries: 5
-      start_period: 30s
+      - /mlflow-data:/mlflow # mount the volume to the /mlflow path in the container
+    environment:
+      - MLFLOW_TRACKING_URI: ${MLFLOW_TRACKING_URI}
+    restart: always
+
 
   postgres:
     image: postgres:13
@@ -110,6 +137,9 @@ services:
       POSTGRES_DB: airflow
     volumes:
       - postgres-db-volume:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    hostname: postgres
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "airflow"]
       interval: 10s
@@ -117,6 +147,19 @@ services:
       start_period: 5s
     restart: always
 
+  pgadmin:
+   image: dpage/pgadmin4:8.6
+   ports:
+     - "5050:5050"
+   environment:
+     PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+     PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+     PGADMIN_LISTEN_PORT: ${PGADMIN_LISTEN_PORT-5050}
+   volumes :
+     - pgadmin-data:/var/lib/pgadmin
+
+  #  expose:
+  #    - "5050"
   # redis:
   #   image: redis:latest
   #   expose:
@@ -149,6 +192,7 @@ services:
   airflow-scheduler:
     <<: *airflow-common
     command: scheduler
+    user: root
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8974/health"]
       interval: 30s
@@ -206,20 +250,6 @@ services:
     command:
       - -c
       - |
-        function ver() {
-          printf "%04d%04d%04d%04d" $${1//./ }
-        }
-        airflow_version=$$(AIRFLOW__LOGGING__LOGGING_LEVEL=INFO && gosu airflow airflow version)
-        airflow_version_comparable=$$(ver $${airflow_version})
-        min_airflow_version=2.2.0
-        min_airflow_version_comparable=$$(ver $${min_airflow_version})
-        if (( airflow_version_comparable < min_airflow_version_comparable )); then
-          echo
-          echo -e "\033[1;31mERROR!!!: Too old Airflow version $${airflow_version}!\e[0m"
-          echo "The minimum Airflow version supported: $${min_airflow_version}. Only use this or higher!"
-          echo
-          exit 1
-        fi
         if [[ -z "${AIRFLOW_UID}" ]]; then
           echo
           echo -e "\033[1;33mWARNING!!!: AIRFLOW_UID not set!\e[0m"
@@ -314,3 +344,7 @@ services:
 
 volumes:
   postgres-db-volume:
+  pgadmin-data:
+  mlflow-data:
+
+

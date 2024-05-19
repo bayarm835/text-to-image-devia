@@ -1,3 +1,0 @@
-FROM tensorflow/tensorflow:latest-gpu
-#CMD [ "pip", "install", "--ignore", "-installed" "blinker"]
-RUN pip install --no-cache-dir scikit-learn matplotlib numpy mlflow --ignore-installed blinker

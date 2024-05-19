@@ -5,24 +5,23 @@ description = "Default template for PDM package"
 authors = [
     {name = "Paul21777", email = "paul.theureau@protonmail.com"},
     {name = "Asup45", email = "thibaut.dessolin@gmail.com"},
-    {name = "bayarm835", email = "bayarm835@gmail.com"}
+    {name = "bayarm835", email = "bayarm835@gmail.com"},
 ]
 dependencies = [
-    "pandas>=2.2.2",
-    "numpy>=1.26.4",
-    "matplotlib>=3.8.4",
-    "opencv-python>=4.9.0.80",
-    "spacy>=3.7.4",
-    "pip>=24.0",
     "docker>=7.0.0",
+    "docker-compose>=1.29.2",
 ]
-requires-python = "==3.9.*"
+requires-python = ">=3.9"
 readme = "README.md"
 license = {text = "MIT"}
 
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
 
 [tool.pdm]
-distribution = false
+distribution = true
 
 [tool.pdm.scripts]
 tensorflow = { shell = "bash train/tensorflow.sh" }
+wsl-permission-error = { shell ="bash ./wsl-permission-error.sh"}
