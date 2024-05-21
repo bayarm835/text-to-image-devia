@@ -6,18 +6,35 @@ import os
 import cv2
 
 
-# Chemin vers la source
-file_path = "../data/raw/Flickr8k_text/Flickr8k_token.txt"
-image_path = "../data/raw/Flickr8k_image/Images/"
+## Chemin vers la source
+#file_path = "../data/raw/Flickr8k_text/Flickr8k_token.txt"
+#image_path = "../data/raw/Flickr8k_image/Images/"
+#
+#
+#jpgs = os.listdir(image_path)
+#
+## Charger le modèle SpaCy en anglais
+#nlp = spacy.load("en_core_web_sm")
+#
+## Fonction pour nettoyer et prétraiter le texte
+#
+#import re
 
-jpgs = os.listdir(image_path)
-
-# Charger le modèle SpaCy en anglais
-nlp = spacy.load("en_core_web_sm")
-
-# Fonction pour nettoyer et prétraiter le texte
-
-def remove_maj_punct_nonalpha(text:str) -> str:
+def remove_maj_punct_nonalpha(text: str) -> str:
+    """
+    Removes major punctuation and non-alphabetic characters from the input text.
+    
+    This function performs the following steps:
+    1. Converts the text to lowercase.
+    2. Removes punctuation.
+    3. Removes digits and other non-alphabetic characters.
+    
+    Args:
+        text (str): The input text to be processed.
+    
+    Returns:
+        str: The processed text with major punctuation and non-alphabetic characters removed.
+    """
     # Convertir en minuscules
     text = text.lower()
     # Supprimer la ponctuation
@@ -25,9 +42,20 @@ def remove_maj_punct_nonalpha(text:str) -> str:
     # Supprimer les chiffres et autres caractères non alphabétiques
     text = re.sub(r'\d+', '', text)
     return text
-
 # Fonction pour effectuer la lemmatisation et la tokenisation
-def lemmatize_and_tokenize(text : str) -> list:
+def lemmatize_and_tokenize(text: str) -> list:
+    """
+    Lemmatizes and tokenizes the input text.
+
+    This function uses SpaCy to analyze the input text, then performs lemmatization
+    and tokenization. It filters out stop words and empty tokens.
+
+    Args:
+        text (str): The input text to be lemmatized and tokenized.
+
+    Returns:
+        list: A list of lemmatized tokens.
+    """
     tokens = []
     # Analyser le texte avec SpaCy
     doc = nlp(text)
@@ -36,13 +64,20 @@ def lemmatize_and_tokenize(text : str) -> list:
         if token.text not in STOP_WORDS and token.text.strip():
             tokens.append(token.lemma_)
     return tokens
-
 # Ajouter les jetons de début et de fin
 def add_start_end_tokens(tokens):
+    """
+    Adds 'startseq' at the beginning and 'endseq' at the end of the tokens list.
+
+    Args:
+        tokens (list): A list of tokens.
+
+    Returns:
+        list: The modified list of tokens with 'startseq' at the beginning and 'endseq' at the end.
+    """
     tokens.insert(0, "startseq")
     tokens.append("endseq")
     return tokens
-
 # Fonction principale pour prétraiter les légendes
 def preprocess_captions_text(text):
     # Créer une liste pour stocker les légendes prétraitées

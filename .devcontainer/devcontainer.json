@@ -1,10 +1,19 @@
 {
-    "image": "ghcr.io/ttmx/tf-torch-docker:main", 
+    "build": {
+      "dockerfile": "Dockerfile"
+    },
     
     "runArgs": [
       "--gpus",
-      "all"
+      "all",
+      "--network",
+      "mlflow"
     ],
+    "containerEnv": {
+      "AWS_ACCESS_KEY":"mlflow",
+      "AWS_SECRET_KEY":"password",
+      "MLFLOW_S3_ENDPOINT_URL": "http://minio:9000"
+    },
     "customizations": {
       "vscode": {
       "extensions": [
@@ -14,4 +23,3 @@
       }
     }
   }
-  

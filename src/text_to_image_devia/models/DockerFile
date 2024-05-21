@@ -1,6 +1,6 @@
 FROM tensorflow/tensorflow:latest-gpu
 COPY /train.py /tmp
 #CMD [ "pip", "install", "--ignore", "-installed" "blinker"]
-RUN pip install --no-cache-dir scikit-learn matplotlib numpy mlflow --ignore-installed blinker
+RUN pip install --no-cache-dir scikit-learn matplotlib numpy mlflow boto3 psycopg2-binary tensorflow-datasets ipykernel --ignore-installed blinker
 EXPOSE 5000
-CMD [ "python", "tmp/train.py" ]
+CMD [ "python", "tmp/train.py" ] 

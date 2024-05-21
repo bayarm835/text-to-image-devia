@@ -1,27 +1,57 @@
 import mlflow
 
-from sklearn.model_selection import train_test_split
-from sklearn.datasets import load_diabetes
-from sklearn.ensemble import RandomForestRegressor
+# TensorFlow and tf.keras
+import tensorflow as tf
+from tensorflow import keras
+from mlflow.tensorflow import MlflowCallback
 
-print("start set tracking uri")
-mlflow.set_tracking_uri("http://localhost:5000") #  connects to a tracking URI.
-print("end set tracking uri")
+print(tf.config.list_physical_devices('GPU'))
 
-mlflow.set_experiment("diabetes")
+fashion_mnist = keras.datasets.fashion_mnist
 
-mlflow.autolog()
-db = load_diabetes()
-X_train, X_test, y_train, y_test = train_test_split(db.data, db.target)
+(train_images, train_labels), (test_images, test_labels) = fashion_mnist.load_data()
 
-rf = RandomForestRegressor(n_estimators=100, max_depth=6, max_features=3)
-# MLflow triggers logging automatically upon model fitting
-rf.fit(X_train, y_train)
+train_images = train_images / 255.0
 
-# MLflow triggers logging automatically upon model evaluation
-print(rf.score(X_test, y_test))
+test_images = test_images / 255.0
+
+model = keras.Sequential([
+    keras.layers.Flatten(input_shape=(28, 28)),
+    keras.layers.Dense(128, activation='relu'),
+    keras.layers.Dense(10)
+])
+
+model.compile(optimizer='adam', loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True))
+
+mlflow.set_tracking_uri("http://mlflow-server:5000") #  connects to a tracking URI.
+
+mlflow.set_experiment("/mlflow-tf-fashion-mnist")
+
+mlflow.tensorflow.autolog(disable=True)
+
+with mlflow.start_run() as run:
+    model.fit(
+        x=train_images,
+        y=train_labels,
+        epochs=10,
+        callbacks=[MlflowCallback(run)],
+    )
+
+test_loss, test_acc = model.evaluate(test_images,  test_labels, verbose=2)
+
+print('\nTest accuracy:', test_acc)
 
 
 
-#print(tf.config.list_physical_devices('GPU'))
+
+
+
+
+# Turn off autologging.
+
+
+
+
+
+
 #print("Hello world ! Ca va ?")

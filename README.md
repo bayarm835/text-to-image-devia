@@ -46,3 +46,10 @@ WSL - Ubuntu-22.04
 
 # Entraînement
 `pdm run tensorflow` : Lance un entraînement sur le container tensorflow
+
+Réaliser un entraînement :
+    Créer un network mlflow : `docker network create mlflow`
+    Reopen in dev container
+    Réaliser les expérimentations
+
+

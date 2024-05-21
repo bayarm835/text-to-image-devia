@@ -10,6 +10,11 @@ authors = [
 dependencies = [
     "docker>=7.0.0",
     "docker-compose>=1.29.2",
+    "spacy>=3.7.4",
+    "pandas>=2.2.2",
+    "opencv-python>=4.9.0.80",
+    "ipykernel>=6.29.4",
+    "pip>=24.0",
 ]
 requires-python = ">=3.9"
 readme = "README.md"
@@ -25,3 +30,4 @@ distribution = true
 [tool.pdm.scripts]
 tensorflow = { shell = "bash train/tensorflow.sh" }
 wsl-permission-error = { shell ="bash ./wsl-permission-error.sh"}
+build-pkg-restart-airflow = { shell = "bash ./build_and_restart_airflow.sh"}

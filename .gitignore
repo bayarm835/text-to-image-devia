@@ -163,3 +163,12 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+airflow/logs/scheduler/latest
+airflow/logs/scheduler/latest
+models/features-2.pkl
+models/features.pkl
+airflow/logs/scheduler/latest
+models/my_model.keras
+airflow/logs/scheduler/latest
+models/VGG16-2epoch.h5
+my_model.keras

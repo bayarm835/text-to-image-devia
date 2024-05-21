@@ -57,8 +57,8 @@ x-airflow-common:
     - /models:/models
     - /src/text_to_image_devia/models:/tmp
   user: "${AIRFLOW_UID:-50000}:0"
-  networks:
-    - mlflow
+  #networks:
+  #  - mlflow
   depends_on:
     &airflow-common-depends-on
     # redis:
@@ -67,22 +67,40 @@ x-airflow-common:
       condition: service_healthy
 
 services:
-  #train:
-  #  build:
-  #    context: ./src/text_to_image_devia/models
-  #    dockerfile: ./dockerfile
-  #  ports:
-  #    - "6080:6080"
-  #  volumes:
-  #    - ./src/text_to_image_devia/models:/tmp
-  #  working_dir: /tmp
-  #  command: ["python", "train.py"]
-  #  healthcheck:
-  #    test: ["CMD", "python", "train.py"]
-  #    timeout: 30s
-  #    retries: 5
-  #    start_period: 30s
+  train:
+    build:
+      context: ./src/text_to_image_devia/models
+      dockerfile: ./DockerFile
+    ports:
+      - "6080:6080"
+    #networks:
+    #  - mlflow
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    #restart: always
 
+  jupyter:
+    build:
+      context: ./src/text_to_image_devia/models
+      dockerfile: dockerfile.jupyter
+    container_name: jupyter
+    ports:
+      - '8888:8888'
+    volumes:
+      - './src/text_to_image_devia/experiments:/tmp/notebook'
+    #networks:
+    #  - mlflow
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_TOKEN=mlflow
+      - AWS_ACCESS_KEY_ID=mlflow
+      - AWS_SECRET_ACCESS_KEY=password
+      - MLFLOW_S3_ENDPOINT_URL=http://minio:9000
   #serve:
   #  image: tensorflow/serving:nightly-gpu
   #  ports:
@@ -100,15 +118,18 @@ services:
       context: ./src/text_to_image_devia/experiments
     ports:
       - "5000:5000"
-    expose:
-      - "5000"
     environment:
-      -  AWS_ACCESS_KEY_ID=mlflow
+      - AWS_ACCESS_KEY_ID=mlflow
       - AWS_SECRET_ACCESS_KEY=password
       - MLFLOW_S3_ENDPOINT_URL=http://minio:9000
-    networks:
-      - mlflow
-    entrypoint: mlflow server --backend-store-uri postgresql+psycopg2://airflow:airflow@postgres/mlflow --default-artifact-root s3://mlflow/ --artifacts-destination s3://mlflow/ -h 0.0.0.0
+    #networks:
+    #  - mlflow
+    volumes:
+      - /mlflow:/mlflow-artifacts
+    expose:
+      - "5000"
+    entrypoint: mlflow server --backend-store-uri postgresql+psycopg2://airflow:airflow@postgres/mlflow --default-artifact-root mlflow-artifacts:/ --artifacts-destination s3://mlflow/ --host 0.0.0.0
+          #mlflow server --host 0.0.0.0 --backend-store-uri postgresql+psycopg2://airflow:airflow@postgres/mlflow --default-artifact-root mlflow-artifacts:/ --artifacts-destination s3://mlflow/ 
     depends_on:
       - postgres
       - minio
@@ -128,8 +149,8 @@ services:
     ports:
       - "5432:5432"
     hostname: postgres
-    networks:
-      - mlflow
+    #networks:
+    #  - mlflow
     healthcheck:
       test: ["CMD", "pg_isready","-U", "airflow"]
       interval: 10s
@@ -146,8 +167,8 @@ services:
      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
      PGADMIN_LISTEN_PORT: ${PGADMIN_LISTEN_PORT-5050}
    
-   networks:
-    - mlflow
+  # networks:
+  #  - mlflow
 
    volumes :
      - pgadmin-data:/var/lib/pgadmin
@@ -157,14 +178,16 @@ services:
     ports:
       - '${FORWARD_MINIO_PORT:-9000}:9000'
       - '${FORWARD_MINIO_CONSOLE_PORT:-8900}:8900'
+    expose:
+      - "9000"
     environment:
       MINIO_ROOT_USER: mlflow
       MINIO_ROOT_PASSWORD: password
     volumes:
-      - 'mlflow-minio:/data/minio'
-    networks:
-      - mlflow
-    command: 'minio server /data/minio --console-address ":8900"'
+      - /mlflow-minio:/data/minio 
+    #networks:
+    #  - mlflow
+    command: 'minio server /mlflow-minio --console-address ":8900"'
     healthcheck:
       test:
         - CMD
@@ -359,18 +382,21 @@ services:
   #       condition: service_completed_successfully
 
 networks:
-  mlflow:
-    driver: bridge 
+  default:
+    external: true
+    name: mlflow
+    driver: overlay
 
 volumes:
   postgres-db-volume:
     driver: local
 
   mlflow-minio:
-    driver: local
 
   pgadmin-data:
 
   pg-init-scripts:
 
+  mlflow:
+  
 
