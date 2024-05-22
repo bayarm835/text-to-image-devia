@@ -172,3 +172,4 @@ models/my_model.keras
 airflow/logs/scheduler/latest
 models/VGG16-2epoch.h5
 my_model.keras
+models/features-3.pkl
