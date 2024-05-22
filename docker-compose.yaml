@@ -72,7 +72,6 @@ services:
       interval: 10s
       retries: 5
       start_period: 5s
-    restart: always
 
   pgadmin:
    image: dpage/pgadmin4:8.6
