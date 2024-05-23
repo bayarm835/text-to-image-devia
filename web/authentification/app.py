@@ -2,15 +2,12 @@ import yaml
 import streamlit as st
 from yaml.loader import SafeLoader
 import streamlit_authenticator as stauth
-from streamlit_authenticator.utilities.exceptions import (CredentialsError,
-                                                          ForgotError,
-                                                          LoginError,
-                                                          RegisterError,
-                                                          ResetError,
-                                                          UpdateError)
+from streamlit_authenticator.utilities.exceptions import (LoginError, RegisterError)
 from PIL import Image
 import io
-import requests
+import numpy as np
+from keras.models import load_model
+from pretraitement import translate_english_to_french
 
 # Loading config file
 with open('../config.yaml', 'r', encoding='utf-8') as file:
@@ -39,14 +36,16 @@ def connexion_page():
     if st.session_state["authentication_status"]:
         authenticator.logout()
         st.write(f'Bienvenue *{st.session_state["name"]}*')
+        st.write(f"Vous pouvez maintenant vous rendre sur la page de prédiction !")
     elif st.session_state["authentication_status"] is False:
         st.error('Nom d\'utilisateur/Mot de passe is incorrect')
     elif st.session_state["authentication_status"] is None:
         st.warning('Entrer votre nom d\'utilisateur et votre mot de passe')
-
-    st.write("Pas encore de compte ?")
-    if st.button("Inscrivez-vous !"):
-        st.session_state.page = "Inscription"
+    
+    if not st.session_state.get("authentication_status"):
+        st.write("Pas encore de compte ?")
+        if st.button("Inscrivez-vous !"):
+            st.session_state.page = "Inscription"
 
 def prediction_page():
     if not st.session_state.get("authentication_status"):
@@ -62,15 +61,25 @@ def prediction_page():
         image = Image.open(io.BytesIO(bytes_data))
         st.image(image, caption='Image chargée avec succès!', use_column_width=True)
 
-        # Send the image to the Docker container
-        files = {'file': bytes_data}
-        response = requests.post('http://localhost:5000/predict', files=files)
-        
-        if response.status_code == 200:
-            prediction = response.json().get('prediction')
-            st.write(f'Prediction: {prediction}')
-        else:
-            st.error('Erreur lors de la prédiction')
+        if st.button("Prédire"):
+            with st.spinner('Prédiction en cours...'):
+                # Resize the image to 224x224
+                resized_image = image.resize((224, 224))
+
+                # Convert the resized image to a numpy array
+                image_array = np.array(resized_image) / 255.0  # Normalize the image
+                image_array = np.expand_dims(image_array, axis=0)  # Add batch dimension
+
+                # Load the model
+                model = load_model('model.keras')
+
+                # Perform prediction
+                prediction = model.predict(image_array)
+                predicted_class = np.argmax(prediction, axis=1)[0]
+
+                # Translate prediction
+                translation = translate_english_to_french(predicted_class)
+                st.write(f'Prediction: {translation}')
 
 def signin_page():
     try:
@@ -100,11 +109,7 @@ def main():
     elif add_selectbox == "Connexion":
         st.session_state.page = "Connexion"
     elif add_selectbox == "Prédiction":
-        if st.session_state.get("authentication_status"):
-            st.session_state.page = "Prédiction"
-        else:
-            st.warning("Veuillez vous connecter pour accéder à cette page.")
-            st.session_state.page = "Connexion"
+        st.session_state.page = "Prédiction"
 
     if st.session_state.page == "Accueil":
         home_page()

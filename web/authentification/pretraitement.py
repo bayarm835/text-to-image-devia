@@ -5,6 +5,7 @@ import re
 import os
 import cv2
 from dotenv import load_dotenv
+from deep_translator import GoogleTranslator
 
 # Charger les variables d'environnement depuis le fichier .env
 load_dotenv()
@@ -75,3 +76,10 @@ def preprocess_images(image_path):
             chemin_image_sortie = os.path.join(dossier_sortie, fichier)
             # Enregistrer l'image redimensionnée
             cv2.imwrite(chemin_image_sortie, image_redimensionnee)
+
+# Fonction pour le traduction anglais --> français
+def translate_english_to_french(text):
+    # Utiliser GoogleTranslator de deep-translator pour traduire le texte
+    translator = GoogleTranslator(source='en', target='fr')
+    translation = translator.translate(text)
+    return translation
